@@ -1,11 +1,11 @@
 const video = document.getElementById("video");
 
 Promise.all([
-  faceapi.nets.tinyFaceDetector.loadFromUri("./models"), //작은얼굴 잡는거
-  faceapi.nets.faceLandmark68Net.loadFromUri("./models"), //눈코입
-  faceapi.nets.faceRecognitionNet.loadFromUri("./models"), //얼굴 따라다니는 박스
-  faceapi.nets.faceExpressionNet.loadFromUri("./models"), //슬픔 웃음 눈물 같은거
-  faceapi.nets.ageGenderNet.loadFromUri("./models"),
+  faceapi.nets.tinyFaceDetector.loadFromUri("./models"), //カメラの中の顔を探すmodule
+  faceapi.nets.faceLandmark68Net.loadFromUri("./models"), //目、鼻、口を探すmodule
+  faceapi.nets.faceRecognitionNet.loadFromUri("./models"), //顔付きボックス
+  faceapi.nets.faceExpressionNet.loadFromUri("./models"), //表情を判断するmodule
+  faceapi.nets.ageGenderNet.loadFromUri("./models"), //年齢性別を判断するmodule
 ]).then(startVideo);
 
 function startVideo() {
@@ -26,16 +26,17 @@ video.addEventListener("play", () => {
   faceapi.matchDimensions(canvas, displaySize);
   setInterval(async () => {
     const detections = await faceapi
-      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()) //카메라 안에 얼굴 모두 인식
-      .withFaceLandmarks()
-      .withFaceExpressions()
-      .withAgeAndGender();
+      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()) //カメラの中にいる顔をすべて認識
+      .withFaceLandmarks() //目、鼻、口を探す
+      .withFaceExpressions() ////表情を判断する
+      .withAgeAndGender(); //年齢性別を判断する
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
-    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    faceapi.draw.drawDetections(canvas, resizedDetections);
-    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-    faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height); //顔に付いて回るボックス
+    faceapi.draw.drawDetections(canvas, resizedDetections); //顔に箱付きの表現
+    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections); //目鼻口点線表現
+    faceapi.draw.drawFaceExpressions(canvas, resizedDetections); //感情情報表現
     resizedDetections.forEach((detection) => {
+      //年齢、性別表現ボックス
       const box = detection.detection.box;
       const drawBox = new faceapi.draw.DrawBox(box, {
         label: Math.round(detection.age) + " year old " + detection.gender,
